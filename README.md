@@ -1,11 +1,32 @@
 # homerun-pinger
-Send an IFTTT alert when my homerun device goes offline
 
-In IFTTT, set up a "maker" applet and get the key from https://ifttt.com/maker_webhooks and click on "documentation".
+A tiny watchdog that pings an [HDHomeRun](https://www.silicondust.com/) (or any device with an
+HTTP endpoint) and fires an [IFTTT](https://ifttt.com/) alert when it stops responding. Run it on a
+schedule with cron and get notified the moment the device goes offline.
 
-Add your key to the "IFTTT_KEY" string.
-Change your HOMERUN_URL to the URL you're expecting to give you a 200 when you do the get request on that URL.
+## How it works
 
-Use crontab to run this python script at a cadence of your choosing (crontab.guru is a great website to help you figure out a cadence.)
+Each run does a single `GET` against `HOMERUN_URL`. Anything other than a `200` — or a connection
+failure — triggers the IFTTT Webhooks event, which can then send you a push, email, etc. Activity
+is logged to `/var/tmp/homerunpinger.log`.
 
-EVENT can be changed to whatever you want. When you create an IFTTT maker applet, be sure you have a matching event name.
+## Setup
+
+1. Install the dependency:
+   ```bash
+   pip install requests
+   ```
+2. Create an IFTTT **Webhooks** applet and grab your key from
+   <https://ifttt.com/maker_webhooks> → *Documentation*.
+3. Edit the constants at the top of `ifttt.py`:
+   - `IFTTT_KEY` — your Webhooks key
+   - `HOMERUN_URL` — the URL expected to return `200` when the device is healthy
+   - `EVENT` — must match the event name in your IFTTT applet
+4. Schedule it with cron at whatever cadence you like ([crontab.guru](https://crontab.guru) helps):
+   ```cron
+   */5 * * * * /usr/bin/python3 /path/to/ifttt.py
+   ```
+
+## License
+
+[MIT](LICENSE) © Corbin Johnson
